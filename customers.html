@@ -1,0 +1,47 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Customers | CareNest</title>
+<style>
+body{font-family:Arial;background:#f4f9f6;margin:0;color:#294638}
+header{background:#073e2e;color:white;padding:20px 7%;display:flex;justify-content:space-between;flex-wrap:wrap}
+a{color:white;text-decoration:none;margin:8px}
+main{padding:30px 7%;overflow-x:auto}
+table{width:100%;background:white;border-collapse:collapse;min-width:600px;box-shadow:0 3px 15px #dce8e0}
+th,td{padding:15px;text-align:left;border-bottom:1px solid #e5eee8}
+th{background:#087b52;color:white}
+</style>
+</head>
+<body>
+<header><h2>CareNest Customers 💚</h2><nav><a href="/admin.html">Dashboard</a><a href="/">Home</a></nav></header>
+<main>
+<h1>Registered Customers</h1>
+<p id="message">Loading customers...</p>
+<table>
+<thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Phone</th><th>Role</th></tr></thead>
+<tbody id="customerRows"></tbody>
+</table>
+</main>
+<script>
+async function loadCustomers(){
+try{
+const r=await fetch("/api/admin/customers");
+if(r.status===401||r.status===403){location.href="/login.html";return;}
+const customers=await r.json();
+const body=document.getElementById("customerRows");body.innerHTML="";
+document.getElementById("message").textContent=customers.length+" accounts found.";
+customers.forEach(c=>{
+const tr=document.createElement("tr");
+[c.user_id,c.name,c.email,c.phone,c.role].forEach(value=>{
+const td=document.createElement("td");td.textContent=value||"-";tr.appendChild(td);
+});
+body.appendChild(tr);
+});
+}catch{document.getElementById("message").textContent="Unable to load customers.";}
+}
+loadCustomers();
+</script>
+</body>
+</html>

@@ -1,0 +1,37 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Login | CareNest</title>
+<style>
+body{font-family:Arial;background:#eaf6ef;display:grid;place-items:center;min-height:100vh;margin:0}
+form{background:white;padding:35px;border-radius:18px;width:min(400px,92%);box-shadow:0 8px 30px #cbded2}
+h1{color:#087b52;text-align:center}input,button{width:100%;padding:13px;margin:10px 0;border:1px solid #d5e2d9;border-radius:8px;font-size:15px}
+button{background:#087b52;color:white;border:0;cursor:pointer}p{text-align:center}a{color:#087b52}
+</style>
+</head>
+<body>
+<form id="loginForm">
+<h1>CareNest 💚</h1><h3>Login to your account</h3>
+<input name="email" type="email" placeholder="Email address" required>
+<input name="password" type="password" placeholder="Password" required>
+<button>Login</button>
+<p id="message"></p>
+<p>New customer? <a href="/register.html">Register</a></p>
+<a href="/">Back to Home</a>
+</form>
+<script>
+document.getElementById("loginForm").addEventListener("submit",async e=>{
+e.preventDefault();
+const data=Object.fromEntries(new FormData(e.target));
+try{
+const r=await fetch("/api/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(data)});
+const result=await r.json();
+if(!r.ok){document.getElementById("message").textContent=result.message;return;}
+location.href=result.user.role==="admin"?"/admin.html":"/medicines.html";
+}catch{document.getElementById("message").textContent="Server connection failed.";}
+});
+</script>
+</body>
+</html>

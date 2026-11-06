@@ -1,0 +1,148 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Admin Dashboard | CareNest</title>
+<style>
+body{font-family:Arial;margin:0;background:#f3f8f5;color:#294638}header{background:#073e2e;color:white;padding:20px 6%;display:flex;justify-content:space-between;flex-wrap:wrap}a{color:white;text-decoration:none;margin:8px}
+main{padding:30px 6%}.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:15px}
+.card,.panel{background:white;padding:20px;border-radius:12px;margin-bottom:20px;box-shadow:0 3px 12px #dce8e0;overflow-x:auto}
+input,button,select{padding:10px;margin:5px;border:1px solid #d5e2d9;border-radius:6px}
+button{background:#087b52;color:white;border:0;cursor:pointer}
+table{width:100%;border-collapse:collapse;min-width:650px}td,th{text-align:left;padding:12px;border-bottom:1px solid #e7eee9}
+h2{color:#087b52}
+</style>
+</head>
+<body>
+<header>
+<h2 style="color:white">CareNest Admin 💚</h2>
+<nav><a href="/">Home</a><a href="/customers.html">Customers</a><a href="/medicines.html">Store</a><a href="#" onclick="logout()">Logout</a></nav>
+</header>
+<main>
+<h1>Admin Dashboard</h1>
+<div class="stats" id="stats"></div>
+
+<section class="panel">
+<h2>Add Medicine</h2>
+<form id="medicineForm">
+<input name="medicine_name" placeholder="Medicine name" required>
+<input name="manufacturer" placeholder="Manufacturer">
+<input name="price" type="number" min="0" step="0.01" placeholder="Price" required>
+<input name="stock" type="number" min="0" placeholder="Stock" required>
+<input name="expiry_date" type="date" required>
+<button>Add Medicine</button>
+</form>
+<p id="message"></p>
+</section>
+
+<section class="panel">
+<h2>Medicine Inventory</h2>
+<table><thead><tr><th>ID</th><th>Name</th><th>Manufacturer</th><th>Price</th><th>Stock</th><th>Expiry</th><th>Action</th></tr></thead>
+<tbody id="medicines"></tbody></table>
+</section>
+
+<section class="panel">
+<h2>Customer Orders</h2>
+<table><thead><tr><th>Order</th><th>Customer</th><th>Date</th><th>Total</th><th>Status</th><th>Update</th><th>Items</th></tr></thead>
+<tbody id="orders"></tbody></table>
+</section>
+</main>
+
+<script>
+async function api(url,options={}){
+const r=await fetch(url,{...options,headers:{"Content-Type":"application/json",...(options.headers||{})}});
+const data=await r.json();
+if(!r.ok)throw new Error(data.message||"Request failed");
+return data;
+}
+async function load(){
+try{
+const data=await api("/api/admin");
+const s=data.stats;
+document.getElementById("stats").innerHTML=
+`<div class="card"><h3>Medicines</h3><h2>${s.medicineCount}</h2></div>
+<div class="card"><h3>Orders</h3><h2>${s.orderCount}</h2></div>
+<div class="card"><h3>Customers</h3><h2>${s.customerCount}</h2></div>
+<div class="card"><h3>Revenue</h3><h2>₹${Number(s.revenue).toFixed(2)}</h2></div>`;
+
+const med=document.getElementById("medicines");med.innerHTML="";
+data.medicines.forEach(m=>{
+const tr=document.createElement("tr");
+[m.medicine_id,m.medicine_name,m.manufacturer,"₹"+m.price,m.stock,m.expiry_date.toString().slice(0,10)].forEach(value=>{
+const td=document.createElement("td");td.textContent=value;tr.appendChild(td);
+});
+const action=document.createElement("td");
+const edit=document.createElement("button");edit.textContent="Edit";
+edit.onclick=()=>editMedicine(m);
+const del=document.createElement("button");del.textContent="Delete";
+del.onclick=()=>deleteMedicine(m.medicine_id);
+action.append(edit,del);tr.appendChild(action);med.appendChild(tr);
+});
+
+const orders=document.getElementById("orders");orders.innerHTML="";
+data.orders.forEach(o=>{
+const tr=document.createElement("tr");
+const values=[o.order_id,o.name,o.order_date.toString().slice(0,10),"₹"+Number(o.total_amount).toFixed(2)];
+values.forEach(value=>{const td=document.createElement("td");td.textContent=value;tr.appendChild(td);});
+const statusCell=document.createElement("td");
+const select=document.createElement("select");
+["Pending","Processing","Delivered","Cancelled"].forEach(v=>{
+const option=document.createElement("option");option.value=v;option.textContent=v;select.appendChild(option);
+});
+select.value=o.status;statusCell.appendChild(select);tr.appendChild(statusCell);
+const updateCell=document.createElement("td");const update=document.createElement("button");update.textContent="Save";
+update.onclick=()=>updateStatus(o.order_id,select.value);
+updateCell.appendChild(update);tr.appendChild(updateCell);
+const itemsCell=document.createElement("td");const items=document.createElement("button");items.textContent="View";
+items.onclick=()=>viewItems(o.order_id);itemsCell.appendChild(items);tr.appendChild(itemsCell);
+orders.appendChild(tr);
+});
+}catch(err){
+if(err.message.includes("Admin access")){location.href="/login.html";return;}
+if(err.message.includes("Please login")){location.href="/login.html";return;}
+alert(err.message);
+}
+}
+document.getElementById("medicineForm").addEventListener("submit",async e=>{
+e.preventDefault();
+try{
+await api("/api/admin/medicine",{method:"POST",body:JSON.stringify(Object.fromEntries(new FormData(e.target)))});
+document.getElementById("message").textContent="Medicine added successfully.";
+e.target.reset();load();
+}catch(err){document.getElementById("message").textContent=err.message;}
+});
+async function deleteMedicine(id){
+if(!confirm("Delete this medicine?"))return;
+try{await api("/api/admin/medicine/"+id,{method:"DELETE"});load();}
+catch(e){alert(e.message);}
+}
+async function editMedicine(m){
+const name=prompt("Medicine name:",m.medicine_name);if(name===null)return;
+const manufacturer=prompt("Manufacturer:",m.manufacturer||"");if(manufacturer===null)return;
+const price=prompt("Price:",m.price);if(price===null)return;
+const stock=prompt("Stock:",m.stock);if(stock===null)return;
+const expiry=m.expiry_date.toString().slice(0,10);
+const expiry_date=prompt("Expiry date (YYYY-MM-DD):",expiry);if(expiry_date===null)return;
+try{
+await api("/api/admin/medicine/"+m.medicine_id,{method:"PUT",body:JSON.stringify({medicine_name:name,manufacturer,price,stock,expiry_date})});
+load();
+}catch(e){alert(e.message);}
+}
+async function updateStatus(id,status){
+try{await api("/api/admin/order/"+id,{method:"PATCH",body:JSON.stringify({status})});alert("Order updated.");}
+catch(e){alert(e.message);}
+}
+async function viewItems(id){
+try{
+const items=await api("/api/admin/order/"+id+"/items");
+alert(items.map(i=>i.medicine_name+" × "+i.quantity+" — ₹"+i.price).join("\n")||"No items found.");
+}catch(e){alert(e.message);}
+}
+async function logout(){
+await fetch("/api/logout",{method:"POST"});location.href="/login.html";
+}
+load();
+</script>
+</body>
+</html>

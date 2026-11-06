@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Medicines | CareNest Pharmacy</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Arial,sans-serif;background:#f5f8f6;color:#24332b}
+header{background:#fff;padding:18px 7%;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 15px #0000000c;position:sticky;top:0;z-index:10}
+.logo{font-size:25px;font-weight:bold;color:#13865d}
+nav a{margin-left:22px;text-decoration:none;color:#34463c;font-weight:600}
+nav a:hover{color:#13865d}
+.hero{padding:55px 7%;background:linear-gradient(110deg,#dff5e9,#effaf4);display:flex;justify-content:space-between;align-items:center;gap:25px}
+.hero h1{font-size:38px;color:#126b4c;margin-bottom:12px}
+.hero p{color:#53665c;line-height:1.7}
+.hero img{width:280px;height:175px;object-fit:cover;border-radius:18px}
+.search{padding:30px 7%;display:flex;justify-content:space-between;gap:15px;align-items:center}
+.search input{width:100%;max-width:450px;padding:14px 18px;border:1px solid #d5e2da;border-radius:10px;font-size:15px;outline:none}
+.search input:focus{border-color:#15966a}
+#count{color:#13865d;font-weight:bold}
+.grid{padding:0 7% 55px;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:23px}
+.card{background:white;border-radius:15px;overflow:hidden;box-shadow:0 5px 20px #193b2910;transition:.3s}
+.card:hover{transform:translateY(-6px);box-shadow:0 12px 25px #193b2920}
+.card img{width:100%;height:165px;object-fit:cover;background:#eaf4ee}
+.info{padding:17px}
+.info h3{font-size:17px;margin-bottom:7px}
+.company{font-size:13px;color:#87948b;margin-bottom:12px}
+.price{font-size:20px;color:#13865d;font-weight:bold;margin-bottom:8px}
+.stock{font-size:12px;color:#64776b;margin-bottom:14px}
+.card button{width:100%;border:0;background:#13865d;color:white;padding:12px;border-radius:8px;font-size:14px;font-weight:bold;cursor:pointer;transition:.2s}
+.card button:hover{background:#096a49}
+.card button:disabled{background:#aab7af;cursor:not-allowed}
+footer{text-align:center;padding:22px;background:#123e30;color:white}
+@media(max-width:650px){header{flex-direction:column;gap:15px}nav a{margin:0 7px;font-size:13px}.hero{flex-direction:column;text-align:center}.hero h1{font-size:29px}.hero img{width:100%}.search{flex-direction:column;align-items:stretch}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">✚ CareNest Pharmacy</div>
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="medicines.html">Medicines</a>
+    <a href="cart.html">Cart 🛒</a>
+    <a href="my-orders.html">My Orders</a>
+  </nav>
+</header>
+
+<section class="hero">
+  <div>
+    <h1>Your Health, Our Priority.</h1>
+    <p>Explore healthcare essentials and everyday wellness products.<br>Find your medicines easily at CareNest Pharmacy.</p>
+  </div>
+  <img src="https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=700" alt="Pharmacy healthcare">
+</section>
+
+<section class="search">
+  <input type="search" id="search" placeholder="Search medicines by name..." oninput="loadMedicines()">
+  <span id="count">Loading medicines...</span>
+</section>
+
+<main class="grid" id="medicineList"></main>
+
+<footer>© 2026 CareNest Pharmacy | Your Health, Our Priority</footer>
+
+<script>
+const CART_KEY = "carenest_cart";
+
+const medicineImages = {
+  "paracetamol": "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=600",
+  "vitamin": "https://images.unsplash.com/photo-1611930022073-b7a4ba5fcccd?w=600",
+  "cetirizine": "https://images.unsplash.com/photo-1550572017-edd951b55104?w=600",
+  "antiseptic": "https://images.unsplash.com/photo-1603398938378-e54eab446dde?w=600",
+  "ors": "https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?w=600",
+  "thermometer": "https://images.unsplash.com/photo-1584634731339-252c581abfc5?w=600",
+  "calcium": "https://images.unsplash.com/photo-1550572017-edd951b55104?w=600",
+  "sanitizer": "https://images.unsplash.com/photo-1584744982491-665216d95f8b?w=600"
+};
+
+function getImage(name) {
+  const key = Object.keys(medicineImages).find(k => name.toLowerCase().includes(k));
+  return key ? medicineImages[key] : "https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=600";
+}
+
+function getCart() {
+  try { return JSON.parse(localStorage.getItem(CART_KEY)) || []; }
+  catch { return []; }
+}
+
+async function loadMedicines() {
+  const list = document.getElementById("medicineList");
+  const search = document.getElementById("search").value.trim();
+
+  list.innerHTML = "<p>Loading medicines...</p>";
+
+  try {
+    const response = await fetch("/api/medicines?search=" + encodeURIComponent(search));
+    if (!response.ok) throw new Error("Could not load medicines");
+
+    const medicines = await response.json();
+    document.getElementById("count").textContent = medicines.length + " medicines available";
+
+    if (!medicines.length) {
+      list.innerHTML = "<p>No medicines found. Try another search.</p>";
+      return;
+    }
+
+    list.innerHTML = medicines.map(m => `
+      <article class="card">
+        <img src="${getImage(m.medicine_name)}"
+             alt="${m.medicine_name}"
+             onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=600'">
+        <div class="info">
+          <h3>${escapeHTML(m.medicine_name)}</h3>
+          <p class="company">${escapeHTML(m.manufacturer || "CareNest Healthcare")}</p>
+          <p class="price">₹${Number(m.price).toFixed(2)}</p>
+          <p class="stock">${Number(m.stock)} units available</p>
+          <button ${Number(m.stock) <= 0 ? "disabled" : ""}
+            onclick="addToCart(${Number(m.medicine_id)}, '${escapeJS(m.medicine_name)}', ${Number(m.price)})">
+            ${Number(m.stock) <= 0 ? "Out of Stock" : "Add to Cart"}
+          </button>
+        </div>
+      </article>
+    `).join("");
+  } catch (error) {
+    list.innerHTML = "<p>Unable to load medicines. Check that the server and database are running.</p>";
+    document.getElementById("count").textContent = "Loading failed";
+    console.error(error);
+  }
+}
+
+function escapeHTML(value) {
+  return String(value).replace(/[&<>"']/g, c => ({
+    "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;"
+  })[c]);
+}
+
+function escapeJS(value) {
+  return String(value).replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/\r/g, "\\r").replace(/\n/g, "\\n");
+}
+
+function addToCart(id, name, price) {
+  const cart = getCart();
+  const existing = cart.find(item => Number(item.medicine_id) === id);
+
+  if (existing) {
+    existing.quantity = Number(existing.quantity) + 1;
+  } else {
+    cart.push({
+      medicine_id: id,
+      medicine_name: name,
+      price: price,
+      quantity: 1
+    });
+  }
+
+  localStorage.setItem(CART_KEY, JSON.stringify(cart));
+  alert(name + " added to your cart!");
+}
+
+loadMedicines();
+</script>
+</body>
+</html>

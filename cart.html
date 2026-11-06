@@ -1,0 +1,516 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shopping Cart | CareNest Pharmacy</title>
+
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+}
+
+body {
+    background: #f4f9f6;
+    color: #294638;
+}
+
+header {
+    background: white;
+    padding: 20px 7%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 3px 12px #e1eae4;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.logo {
+    font-size: 25px;
+    font-weight: bold;
+    color: #087b52;
+}
+
+nav {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+nav a {
+    text-decoration: none;
+    color: #087b52;
+    font-weight: bold;
+}
+
+main {
+    max-width: 1000px;
+    margin: 40px auto;
+    padding: 15px;
+}
+
+h1 {
+    color: #075e42;
+    margin-bottom: 25px;
+}
+
+.panel {
+    background: white;
+    padding: 25px;
+    border-radius: 15px;
+    margin-bottom: 25px;
+    box-shadow: 0 5px 20px rgba(0,0,0,.05);
+}
+
+.panel h2 {
+    color: #087b52;
+    margin-bottom: 20px;
+}
+
+.cart-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 17px 0;
+    border-bottom: 1px solid #e9efeb;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.item-name {
+    font-weight: bold;
+}
+
+.item-price {
+    color: #087b52;
+    font-weight: bold;
+}
+
+.quantity-control {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.quantity-control button {
+    width: 30px;
+    height: 30px;
+    border: 0;
+    background: #e0f4e8;
+    color: #087b52;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 18px;
+}
+
+.remove-btn {
+    background: #ffe8e8;
+    color: #c0392b;
+    border: 0;
+    padding: 9px 13px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.summary {
+    text-align: right;
+    margin-top: 20px;
+}
+
+.total {
+    font-size: 25px;
+    color: #087b52;
+    font-weight: bold;
+    margin-bottom: 15px;
+}
+
+.checkout-form input {
+    width: 100%;
+    padding: 14px;
+    margin: 9px 0;
+    border: 1px solid #dce8e0;
+    border-radius: 8px;
+    outline: none;
+    font-size: 15px;
+}
+
+.checkout-form input:focus {
+    border-color: #087b52;
+}
+
+.place-btn {
+    width: 100%;
+    background: #087b52;
+    color: white;
+    border: none;
+    padding: 15px;
+    border-radius: 9px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 15px;
+}
+
+.place-btn:hover {
+    background: #065c3e;
+}
+
+.place-btn:disabled {
+    background: #9bb8a8;
+    cursor: not-allowed;
+}
+
+.message {
+    margin-top: 15px;
+    font-weight: bold;
+    line-height: 1.6;
+}
+
+.empty {
+    text-align: center;
+    padding: 35px;
+    color: #718078;
+}
+
+.empty a {
+    display: inline-block;
+    margin-top: 15px;
+    background: #087b52;
+    color: white;
+    padding: 12px 20px;
+    text-decoration: none;
+    border-radius: 8px;
+}
+
+footer {
+    text-align: center;
+    padding: 25px;
+    background: #073e2e;
+    color: white;
+    margin-top: 40px;
+}
+
+@media(max-width:600px) {
+    .cart-item {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+    .summary {
+        text-align: left;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <div class="logo">CareNest 💚</div>
+
+    <nav>
+        <a href="/">Home</a>
+        <a href="/medicines.html">Medicines</a>
+        <a href="/my-orders.html">My Orders</a>
+        <a href="/login.html">Login</a>
+    </nav>
+</header>
+
+<main>
+
+<h1>🛒 Your Shopping Cart</h1>
+
+<section class="panel">
+    <h2>Cart Items</h2>
+
+    <div id="cartItems"></div>
+
+    <div class="summary">
+        <p class="total" id="total">Total: ₹0.00</p>
+    </div>
+</section>
+
+<section class="panel">
+    <h2>Delivery Information</h2>
+
+    <form id="checkoutForm" class="checkout-form">
+
+        <input
+            type="text"
+            name="name"
+            id="customerName"
+            placeholder="Enter your full name"
+            required
+        >
+
+        <input
+            type="email"
+            name="email"
+            id="customerEmail"
+            placeholder="Enter your email address"
+            required
+        >
+
+        <input
+            type="tel"
+            name="phone"
+            id="customerPhone"
+            placeholder="Enter your phone number"
+            required
+        >
+
+        <button type="submit" class="place-btn" id="placeBtn">
+            Place Order
+        </button>
+
+        <div class="message" id="message"></div>
+
+    </form>
+</section>
+
+</main>
+
+<footer>
+    © 2026 CareNest Pharmacy | Your Health, Our Priority 💚
+</footer>
+
+<script>
+
+const cartContainer = document.getElementById("cartItems");
+const totalElement = document.getElementById("total");
+const message = document.getElementById("message");
+const placeBtn = document.getElementById("placeBtn");
+
+function getCart() {
+    try {
+        return JSON.parse(localStorage.getItem("carenest_cart")) || [];
+    } catch {
+        return [];
+    }
+}
+
+function saveCart(cart) {
+    localStorage.setItem("carenest_cart", JSON.stringify(cart));
+}
+
+function renderCart() {
+
+    const cart = getCart();
+    cartContainer.innerHTML = "";
+
+    if (cart.length === 0) {
+
+        cartContainer.innerHTML = `
+            <div class="empty">
+                <h3>Your cart is empty!</h3>
+                <p>Please add medicines before placing an order.</p>
+                <a href="/medicines.html">Explore Medicines</a>
+            </div>
+        `;
+
+        totalElement.textContent = "Total: ₹0.00";
+        placeBtn.disabled = true;
+        return;
+    }
+
+    placeBtn.disabled = false;
+
+    let total = 0;
+
+    cart.forEach((item, index) => {
+
+        const price = Number(item.price);
+        const quantity = Number(item.quantity);
+
+        total += price * quantity;
+
+        const row = document.createElement("div");
+        row.className = "cart-item";
+
+        const name = document.createElement("span");
+        name.className = "item-name";
+        name.textContent = item.medicine_name;
+
+        const priceText = document.createElement("span");
+        priceText.className = "item-price";
+        priceText.textContent = "₹" + price.toFixed(2);
+
+        const quantityBox = document.createElement("div");
+        quantityBox.className = "quantity-control";
+
+        const minus = document.createElement("button");
+        minus.textContent = "-";
+        minus.type = "button";
+        minus.onclick = () => changeQuantity(index, -1);
+
+        const qty = document.createElement("span");
+        qty.textContent = quantity;
+
+        const plus = document.createElement("button");
+        plus.textContent = "+";
+        plus.type = "button";
+        plus.onclick = () => changeQuantity(index, 1);
+
+        quantityBox.append(minus, qty, plus);
+
+        const remove = document.createElement("button");
+        remove.className = "remove-btn";
+        remove.textContent = "Remove";
+        remove.type = "button";
+        remove.onclick = () => removeItem(index);
+
+        row.append(name, priceText, quantityBox, remove);
+
+        cartContainer.appendChild(row);
+    });
+
+    totalElement.textContent = "Total: ₹" + total.toFixed(2);
+}
+
+function changeQuantity(index, amount) {
+
+    const cart = getCart();
+
+    cart[index].quantity = Number(cart[index].quantity) + amount;
+
+    if (cart[index].quantity <= 0) {
+        cart.splice(index, 1);
+    }
+
+    saveCart(cart);
+    renderCart();
+}
+
+function removeItem(index) {
+
+    const cart = getCart();
+
+    cart.splice(index, 1);
+
+    saveCart(cart);
+    renderCart();
+}
+
+// CHECKOUT
+document.getElementById("checkoutForm").addEventListener("submit", async function(e) {
+
+    e.preventDefault();
+
+    const cart = getCart();
+
+    if (!cart.length) {
+        message.textContent = "Your cart is empty.";
+        return;
+    }
+
+    const customer = {
+        name: document.getElementById("customerName").value.trim(),
+        email: document.getElementById("customerEmail").value.trim(),
+        phone: document.getElementById("customerPhone").value.trim()
+    };
+
+    if (!customer.name || !customer.email || !customer.phone) {
+        message.textContent = "Please enter all delivery details.";
+        return;
+    }
+
+    const items = cart.map(item => ({
+        medicine_id: Number(item.medicine_id),
+        quantity: Number(item.quantity)
+    }));
+
+    if (items.some(item =>
+        !Number.isInteger(item.medicine_id) ||
+        item.medicine_id <= 0 ||
+        !Number.isInteger(item.quantity) ||
+        item.quantity <= 0
+    )) {
+        message.textContent = "Invalid medicine details in cart. Please remove and add the medicines again.";
+        return;
+    }
+
+    placeBtn.disabled = true;
+    placeBtn.textContent = "Placing Order...";
+    message.style.color = "#087b52";
+    message.textContent = "Please wait...";
+
+    try {
+
+        const response = await fetch("/api/checkout", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            credentials: "same-origin",
+            body: JSON.stringify({
+                ...customer,
+                items
+            })
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            if (response.status === 401) {
+                throw new Error("Please login before placing an order.");
+            }
+            throw new Error(result.message || "Unable to place order.");
+        }
+
+        // Clear cart only after successful database order
+        localStorage.removeItem("carenest_cart");
+
+        message.style.color = "#087b52";
+        message.innerHTML =
+            "✓ Order placed successfully!<br>" +
+            "Order ID: #" + result.order_id + "<br>" +
+            "Total Amount: ₹" + Number(result.total_amount).toFixed(2) +
+            "<br><br>Redirecting to your orders...";
+
+        renderCart();
+
+        document.getElementById("checkoutForm").reset();
+
+        setTimeout(() => {
+            window.location.href = "/my-orders.html";
+        }, 2500);
+
+    } catch (error) {
+
+        message.style.color = "#c0392b";
+        message.textContent = error.message;
+
+        placeBtn.disabled = false;
+        placeBtn.textContent = "Place Order";
+    }
+});
+
+async function checkLogin() {
+    try {
+        const response = await fetch("/api/session");
+        const data = await response.json();
+
+        if (!data.user) {
+            message.style.color = "#c0392b";
+            message.textContent = "Please login before placing an order.";
+            placeBtn.disabled = true;
+        } else {
+            document.getElementById("customerName").value = data.user.name || "";
+            document.getElementById("customerEmail").value = data.user.email || "";
+        }
+    } catch (error) {
+        console.error("Session check failed:", error);
+    }
+}
+
+renderCart();
+checkLogin();
+
+</script>
+
+</body>
+</html>

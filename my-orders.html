@@ -1,0 +1,51 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>My Orders | CareNest</title>
+<style>
+body{font-family:Arial;background:#f5faf7;margin:0;color:#294638}header{padding:20px 7%;background:white;display:flex;justify-content:space-between;flex-wrap:wrap}a{color:#087b52;text-decoration:none;font-weight:bold}
+main{max-width:1000px;margin:35px auto;padding:20px}.order{background:white;padding:22px;border-radius:13px;margin:15px 0;box-shadow:0 3px 15px #e3ebe5}.status{color:#087b52;font-weight:bold}
+</style>
+</head>
+<body>
+<header><h2>CareNest 💚</h2><nav><a href="/">Home</a>　<a href="/medicines.html">Medicines</a>　<a href="/cart.html">Cart</a></nav></header>
+<main>
+<h1>My Orders</h1>
+<div id="orders">Loading orders...</div>
+</main>
+<script>
+async function loadOrders(){
+const box=document.getElementById("orders");
+try{
+const r=await fetch("/api/my-orders");
+if(r.status===401){location.href="/login.html";return;}
+const data=await r.json();
+box.innerHTML="";
+if(!data.length){box.textContent="You have not placed any orders yet.";return;}
+const groups={};
+data.forEach(item=>{
+if(!groups[item.order_id])groups[item.order_id]={...item,items:[]};
+if(item.item_id)groups[item.order_id].items.push(item);
+});
+Object.values(groups).forEach(order=>{
+const card=document.createElement("section");card.className="order";
+const title=document.createElement("h3");title.textContent="Order #"+order.order_id;
+const date=document.createElement("p");date.textContent="Date: "+new Date(order.order_date).toLocaleString();
+const status=document.createElement("p");status.className="status";status.textContent="Status: "+order.status;
+const total=document.createElement("p");total.textContent="Total: ₹"+Number(order.total_amount).toFixed(2);
+const list=document.createElement("ul");
+order.items.forEach(item=>{
+const li=document.createElement("li");
+li.textContent=item.medicine_name+" × "+item.quantity+" — ₹"+(Number(item.price)*Number(item.quantity)).toFixed(2);
+list.appendChild(li);
+});
+card.append(title,date,status,list,total);box.appendChild(card);
+});
+}catch{box.textContent="Unable to load orders. Please try again.";}
+}
+loadOrders();
+</script>
+</body>
+</html>
